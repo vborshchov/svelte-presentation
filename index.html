@@ -1,0 +1,221 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>Svelte - магічно зникаючий фреймворк</title>
+
+		<link rel="stylesheet" href="css/reset.css">
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/black.css">
+
+		<!-- Theme used for syntax highlighting of code -->
+		<link rel="stylesheet" href="lib/css/monokai.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+
+		<style>
+			.backgrounds {
+				background-repeat: no-repeat;
+				background-position: 0 auto;
+			}
+
+			.container{
+				width: 100%;
+				margin: 0 auto;
+				display: flex;
+			}
+			.col{
+				flex: 1;
+				width: 50%;
+				height: 100%;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+				<section>
+					<h1>Svelte</h1>
+					<h2>Магічно зникаючий фреймворк</h2>
+					<p>
+						<small>Віктор Борщов, <a href="https://titanium-labs.com/" target="_blank">Titanium Labs</a></small>
+					</p>
+				</section>
+				<section id="what-is-svelte">
+					<h2>Що таке Svelte?</h2>
+					<p class="fragment fade-in">
+						Svelte — це не бібліотека.
+					</p>
+					<p class="fragment fade-in">
+						Svelte — це не фреймворк.
+					</p>
+					<p class="fragment fade-in">
+						Швидше, Svelte - це компілятор, який отримує ваш код і видає нативний JavaScript, який безпосередньо взаємодіє з DOM без необхідності в будь-якому посереднику.
+					</p>
+					<aside class="notes">
+						<p>Svelte - радикально новий підхід до побудови інтерфейсів користувача. У той час як традиційні фреймворки, такі як React і Vue, роблять більшу частину своєї роботи в браузері, Svelte працює на етапі компіляції, який відбувається при створенні програми.
+						</p>
+						<p>Замість використання методів, таких як віртуальний DOM, Svelte створює код, який хірургічно оновлює DOM, коли змінюється стан вашого додатка.</p>
+						<p>
+							Svelte - це компонентний фреймворк - як React або Vue - але з важливою відмінністю. Традиційні фреймворки дозволяють писати декларативний код, керований стейтом, але за цьому є ціна: браузер повинен зробити додаткову роботу, щоб перетворити ці декларативні структури в операції DOM, використовуючи такі методи, як сміттєзбирач (garbadge collector).
+						</p>
+						<p>
+							Замість цього, Svelte працює під час створення, перетворюючи ваші компоненти у високоефективний імперативний код, який хірургічно оновлює DOM. Як результат, ви зможете писати амбітні програми з відмінними характеристиками швидкодії.
+						</p>
+						<p>
+							Щоб зробити це можливим, ми спочатку повинні переосмислити концепцію, що лежить в основі сучасних UI фреймворків: реактивність.
+						</p>
+					</aside>
+				</section>
+				<section id="react-is-not-fully-reactive">
+					<img src="./images/react_is_not_fully_reactive.png" alt="">
+					<aside class="notes">
+						<p>Що ж мав на увазі Dan, і як це вплинуло на те, як ми зараз пишемо код? Щоб відповісти на ці питання, дозвольте мені спрощено розповісти про те, як React працює під капотом.</p>
+						<p>Коли відбувається рендер React-додатку, копія DOM кладеться в структуру, яка називається Virtual DOM. Цей віртуальний DOM виступає посередником між вашим React-кодом і тим, що браузер відображає в DOM.</p>
+						<p>Потім, при зміні даних (наприклад, після виклику this.setState або useState), React проробляє невелику роботу, щоб визначити, які частини DOM потрібно перемалювати.</p>
+						<p>Він порівнює віртуальний DOM з реальним, щоб визначити, що змінилося після оновлення даних. Потім перемальовує тільки ті частини DOM, які мають відмінності в віртуальному DOM, усуваючи необхідність щоразу при будь-якій зміні, перемальовувати весь DOM цілком.</p>
+						<p>Все відбувається дуже швидко, тому що оновлювати віртуальний DOM набагато дешевше, ніж реальний, і React оновлює тільки необхідні шматочки реального DOM. Ця стаття набагато краще пояснює цей процес.</p>
+						<p>Ймовірно, ви помітили одну особливість. Якщо ви не повідомите React, що дані змінилися (викликавши this.setState або еквівалентний хук), віртуальний DOM не зміниться, і від React не буде ніякої реакції (та-дам!).</p>
+						<p>Ось що мав на увазі Dan, коли сказав, що React в повному обсязі реактивний. React покладається на те, що ви самостійно відстежуєте дані свого застосування і повідомляєте про їх зміни. Це додає вам роботи.</p>
+					</aside>
+				</section>
+				<section id="reactivity">
+					<h2>Реактивність</h2>
+					<pre><code class="hljs">
+count += 1;
+					</code></pre>
+					<pre><code class="hljs">
+count += 1; $$invalidate('count', count);
+					</code></pre>
+					<aside class="notes">
+						<p>Найкращий API - взагалі без API. Ми можемо просто використовувати мову - JavaScript. Оновлення значення деякої змінної COUNT - і всього що залежать від цієї змінної - має бути таким же простим як:</p>
+						<p>
+							count += 1;
+						</p>
+						<p>
+							Оскільки ми Svelte є компілятором, ми можемо зробити це за допомогою "службових" інструкції/функцій за кадром:
+						</p>
+						<p>
+							count += 1; $$invalidate('count', count);
+						</p>
+					</aside>
+				</section>
+				<section id="less-code">
+					<h2>Менше коду - краще DX</h2>
+					<div class="container">
+						<img class="col" src="./images/svelte_app.png" alt="">
+						<img class="col" src="./images/react_app.png" alt="">
+					</div>
+					<aside class="notes">
+						<p>
+							Для ідентичних по функціоналу додатків Svelte потрібно 17 рядків, в той час як для React, з використання хуків треба 27 рядків. 
+						</p>
+					</aside>
+				</section>
+				<section id="performance">
+					<h2>Продуктивність</h2>
+					<section>
+						<div class="fragment fade-in">
+							<h4>React API:</h4>
+							<p>shouldComponentUpdate</p>
+							<p>useMemo</p>
+							<p>React.PureComponent</p>
+							<p>та інші</p>
+						</div>
+						<aside class="notes">
+							<p>Як щодо продуктивності? І наскільки зручні додатки, написані повністю в Svelte?</p>
+							<p>Одна з причин, чому React настільки потужний, полягає в тому, що він використовує віртуальний DOM для можливості перемальовування користувацького інтерфейсу програми невеликими частинами, усуваючи необхідність перемальовувати весь DOM кожен раз, коли щось змінюється (що дійсно дуже дорого).</p>
+							<p>Однак, недоліком цього підходу є те, що в разі зміни даних компонента React буде повторно перемальовувати не тільки сам компонент, але і всі його дочірні елементи незалежно від того, змінювалися вони чи ні. Ось чому в React існують такі методи API, як shouldComponentUpdate, useMemo, React.PureComponent і т.д.</p>
+							<p>Це проблема завжди буде мати місце при використанні віртуального DOM для відтворення призначеного для користувача інтерфейсу при зміні стану програми.</p>
+							<p>Svelte не використовує віртуальний DOM, але як же тоді він вирішує проблему перемальовування DOM згідно з новими даними стану? Що ж, дозвольте мені привести цитату Rich Harris з його чудового виступу на YGLF:</p>
+						</aside>
+					</section>
+				</section>
+				<section>
+					<blockquote>
+						Фреймворки - це не інструменти організації вашого коду. Це інструменти для організації вашого розуму.
+					</blockquote>
+					<p>
+						Rich Harris
+					</p>
+					<aside class="notes">
+						<p>
+							Ця думка привела до ідеї, що фреймворк може бути чимось, що працює ще на етапі складання програми, усуваючи таким чином необхідність для вашого коду мати посередника в Рантайм. Завдяки цій ідеї, Svelte став компілятором, а не фреймворком.
+						</p>
+						<p>
+							Ця проста ідея, також пояснює чому Svelte дуже швидкий. Svelte компілює ваш код в ефективний низькорівневий Javascript, який безпосередньо взаємодіє з DOM. Це все чудово, але як Svelte вирішує проблему перерендерінга всього DOM цілком при зміні даних?
+						</p>
+						<p>
+							Різниця полягає в тому, яким чином традиційні фреймворки (наприклад, React) і Svelte дізнаються, що в змозі щось змінилося. Ми вже раніше обговорили, що в React необхідно викликати метод API, щоб повідомити йому, коли дані змінюються. У разі Svelte досить просто використовувати оператор присвоювання =.
+						</p>
+					</aside>
+				</section>
+				<section>
+					<h1>Нумо покодимо!</h1>
+				</section>
+				<section id="advantages">
+					<h2>Особливості</h2>
+					<ol>
+						<li>
+							Це компонентний фреймворк з 0 додатковими залежностями
+						</li>
+						<li>
+							Використовує ізоляцію стилів без використання CSS-in-JS 
+						</li>
+						<li>
+							Щоб почати роботу потрібен лише дуже простий скрипт збірки
+						</li>
+						<li>
+							У базовому проекті практично немає ніяких додаткових файлів
+						</li>
+					</ol>
+				</section>
+				<section>
+					<h1>Питання</h1>
+				</section>
+				<section>
+					<h1>Дякую за увагу</h1>
+				</section>
+			</div>
+		</div>
+
+		<script src="js/reveal.js"></script>
+
+		<script>
+			// More info about config & dependencies:
+			// - https://github.com/hakimel/reveal.js#configuration
+			// - https://github.com/hakimel/reveal.js#dependencies
+			Reveal.initialize({
+				width: 1200,
+				// height: 1024,
+				history: true,
+				dependencies: [
+					{ src: 'plugin/markdown/marked.js' },
+					{ src: 'plugin/markdown/markdown.js' },
+					{ src: 'plugin/notes/notes.js', async: true },
+					{ src: 'plugin/highlight/highlight.js', async: true }
+				],
+				// Parallax background image
+				parallaxBackgroundImage: './images/svelte-logo-outline.svg', // e.g. "https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg"
+
+				// Parallax background size
+				parallaxBackgroundSize: '1000px 800px', // CSS syntax, e.g. "2100px 900px" - currently only pixels are supported (don't use % or auto)
+
+				// Number of pixels to move the parallax background per slide
+				// - Calculated automatically unless specified
+				// - Set to 0 to disable movement along an axis
+				parallaxBackgroundHorizontal: 50,
+				parallaxBackgroundVertical: 50
+			});
+		</script>
+	</body>
+</html>
